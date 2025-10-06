@@ -6,7 +6,7 @@ from .config import Config
 from .web import web_bp
 
 
-def create_app():
+def create_app() -> Flask:
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(Config)
 
@@ -23,7 +23,7 @@ def create_app():
     app.register_blueprint(api_bp, url_prefix="/api")
 
     @app.teardown_appcontext
-    def cleanup(exception=None):
+    def cleanup(exception: BaseException | None = None) -> None:
         remove_session()
 
     return app

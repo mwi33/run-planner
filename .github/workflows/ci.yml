@@ -32,9 +32,14 @@ jobs:
           name: coverage-xml
           path: coverage.xml
 
+# existing:
+# jobs:
+#   lint-test: ...
+
   docker-image:
-    if: startsWith(github.ref, 'refs/tags/')
+    needs: lint-test
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     permissions:
       contents: read
       packages: write
@@ -46,9 +51,44 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push
+      - name: Build & push image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}:main
+
+  deploy:
+    needs: docker-image
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: SSH into VPS and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/run-planner
+
+            # If your GHCR is private, login first
+            if [ -n "${{ secrets.GHCR_TOKEN }}" ]; then
+              docker login ghcr.io -u "${{ secrets.GHCR_USER }}" -p "${{ secrets.GHCR_TOKEN }}"
+            fi
+
+            # Pull latest image and (re)start
+            docker compose pull
+            docker compose up -d
+
+            # Run DB migrations inside the running container
+            docker compose exec -T web alembic upgrade head
+
+            # Optional: bounce the app after migration
+            docker compose restart web
+ 

@@ -1,11 +1,12 @@
 from flask import jsonify, request
+from flask.typing import ResponseReturnValue
 
 from ..services.decisions import CamberInputs, camber_spread_rule
 from . import api_bp
 
 
 @api_bp.post("/run-plans/<int:rp_id>/decide/camber")
-def decide_camber(rp_id: int):
+def decide_camber(rp_id: int) -> ResponseReturnValue:
     payload = request.get_json(force=True, silent=True) or {}
     try:
         inputs = CamberInputs(**payload)
