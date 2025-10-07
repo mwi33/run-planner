@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # remove bind mount in prod
+    volumes: []
+    # prod env toggles
+    environment:
+      FLASK_ENV: "production"
+      FLASK_DEBUG: "0"
+      # DATABASE_URL usually still points at 'db' if using the same compose network.
+      # If you use a managed DB, override this in your server .env
+      DATABASE_URL: "postgresql+psycopg://runplanner:runplanner@db:5432/runplanner"
+      SQLALCHEMY_DATABASE_URI: "postgresql+psycopg://runplanner:runplanner@db:5432/runplanner"
+    # run via gunicorn in prod
+    command: ["gunicorn","-k","gthread","-w","4","-b","0.0.0.0:5000","wsgi.py:app"]
+    restart: unless-stopped
+
+  db:
+    # in prod you might want persistence & backups; this mirrors dev by default
+    restart: unless-stopped
