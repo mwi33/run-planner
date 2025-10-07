@@ -1,0 +1,8 @@
+.git
+.vscode
+__pycache__/
+*.py[cod]
+.env
+dbdata/
+.mypy_cache/
+.pytest_cache/

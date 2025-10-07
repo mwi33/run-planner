@@ -31,3 +31,14 @@ act-test:
 
 docker-build:
 	docker build -t run-planner:local .
+
+compose-up:
+	docker compose up --build
+compose-db:
+	docker compose up -d db
+compose-rev:
+	docker compose run --rm app alembic revision --autogenerate -m "$(m)"
+compose-migrate:
+	docker compose run --rm app alembic upgrade head
+compose-down:
+	docker compose down -v

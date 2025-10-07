@@ -1,0 +1,19 @@
+# syntax=docker/dockerfile:1.7
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
+
+WORKDIR /app
+
+# If you use requirements.txt
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+# If you use pyproject.toml instead, replace the two lines above with:
+# COPY pyproject.toml poetry.lock* /app/
+# RUN pip install --no-cache-dir pipx && pipx install poetry && \
+#     /root/.local/bin/poetry export -f requirements.txt --output /tmp/req.txt --without-hashes && \
+#     pip install --no-cache-dir -r /tmp/req.txt
+
+# We don't COPY source here because compose bind-mounts the repo (volumes: .:/app)
