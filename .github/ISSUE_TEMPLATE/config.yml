@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+- name: 📚 Contributor Guide (Wiki)
+url: https://github.com/<org-or-user>/run-planner/wiki
+about: Read our onboarding, local testing, and PR workflow.
+- name: 🧭 How We Ship
+url: https://github.com/<org-or-user>/run-planner/wiki/How-We-Ship
+about: Visual overview of our end‑to‑end flow.
