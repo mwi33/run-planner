@@ -1,78 +1,30 @@
-# Run Planner (Flask + Local CI/CD Starter)
+# 🏁 Run Planner
 
-A modular-monolith Flask app skeleton for iRacing run planning and setup decisions **with local CI/CD**.
+> *Per scientiam ad celeritatem — Through knowledge to speed.*
 
-What you get:
-- Flask app factory, web + API blueprints
-- SQLAlchemy models + Alembic migrations
-- **CI pipeline**: lint (ruff, black), type-check (mypy), tests (pytest+coverage)
-- **Run CI locally with `act`** (no cloud needed)
-- Dockerfile + docker-compose (optional Postgres)
-- Pre-commit hooks
+**Run Planner** is a data-driven coordination tool for sim-racing engineers and drivers.  
+It structures the full testing workflow — from planning and setup tracking to telemetry integration and session analysis — ensuring every lap, file, and change is traceable.
 
-## Quickstart (app)
+Part of the **Optimised / Sim Dynamics** ecosystem.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt -r requirements-dev.txt
-cp .env.example .env
-alembic upgrade head
-flask --app wsgi:app run --debug
-```
+---
 
-Test the API:
+## 🚦 Overview
 
-```bash
-curl -X POST http://127.0.0.1:5000/api/run-plans/1/decide/camber   -H "Content-Type: application/json"   -d '{"inner":85,"middle":78,"outer":70,"target_spread":10}'
-```
+Sim racing produces immense amounts of data: setups, telemetry, weather conditions, and driver feedback.  
+Run Planner connects these into a single workflow — replacing spreadsheets and scattered notes with a coherent, auditable process that mirrors professional motorsport practice.
 
-## Local CI (no GitHub required)
+**Core capabilities include:**
+- **Run Session Management:** Plan, execute, and review testing sessions.  
+- **Setup Provenance:** Version and hash every configuration for traceability.  
+- **Telemetry Integration:** Link MoTeC i2 Pro, CSV, or custom Python analysis.  
+- **Qualitative Feedback:** Record driver feel and environment context.  
+- **Comparative Analysis:** Quantify performance deltas between runs.  
+- **Reporting:** Generate summaries that link goals, results, and insights.
 
-Install `act`: https://github.com/nektos/act
+---
 
-```bash
-# run the same checks GitHub Actions will run
-act -W .github/workflows/ci.yml -j lint-test
-```
+## 🧱 Architecture
 
-If you see an image error, use our mapping:
-```bash
-act --container-architecture linux/amd64     -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-22.04     -W .github/workflows/ci.yml -j lint-test
-```
+Run Planner is a **Python Flask** application with a modular structure:
 
-## GitHub Actions
-
-- On push/PR: ruff, black --check, mypy, pytest (coverage artifact)
-- On tag: Docker build & push to GHCR (optional; requires permissions)
-
-## Docker (optional)
-
-Production-ish:
-```bash
-docker build -t run-planner:local .
-docker run -p 8000:8000 --env-file .env run-planner:local
-# http://127.0.0.1:8000
-```
-
-Local Postgres:
-```bash
-docker compose up -d
-# DATABASE_URL is set in compose to postgres
-alembic upgrade head
-```
-
-## Repo layout
-(abridged)
-```
-app/                # your code
-.github/workflows/  # CI config
-tests/              # pytest suite
-migrations/         # alembic
-```
-
-## Pre-commit
-```bash
-pre-commit install
-pre-commit run --all-files
-```
