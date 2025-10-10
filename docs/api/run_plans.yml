@@ -1,0 +1,170 @@
+
+---
+
+## `docs/api/run-plans.yaml` (OpenAPI 3.1 stub)
+
+```yaml
+openapi: 3.1.0
+info:
+  title: Run Planner API
+  version: 0.1.0
+  description: Minimal endpoints for Run Plans v1.
+servers:
+  - url: http://localhost:8000
+paths:
+  /run-plans:
+    post:
+      summary: Create a run plan and compute results
+      operationId: createRunPlan
+      tags: [run-plans]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunPlanInput'
+            examples:
+              byRequiredLaps:
+                value:
+                  title: "Bathurst baseline"
+                  objective: "practice_run"
+                  car:
+                    code: "bmw_m4_gt3"
+                    tank_capacity_l: 120
+                  track:
+                    code: "mount_panorama"
+                    length_km: 6.213
+                    pit_lane_loss_s: 28
+                  weather:
+                    ambient_c: 22
+                    track_c: 31
+                  driver:
+                    name: "A. Driver"
+                  target_pace_s: 90.6
+                  fuel_burn_l_per_lap: 2.7
+                  required_laps: 25
+                  starting_fuel_l: 60
+              byDuration:
+                value:
+                  title: "60-min long run"
+                  objective: "tyre_life_test"
+                  car: { code: "bmw_m4_gt3", tank_capacity_l: 120 }
+                  track: { code: "spa", length_km: 7.004 }
+                  target_pace_s: 132.5
+                  run_duration_min: 60
+                  fuel_burn_l_per_lap: 2.9
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunPlan'
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+  /run-plans/{id}:
+    get:
+      summary: Retrieve a run plan by id
+      operationId: getRunPlan
+      tags: [run-plans]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunPlan'
+        "404":
+          description: Not found
+components:
+  schemas:
+    RunPlanInput:
+      type: object
+      required: [fuel_burn_l_per_lap]
+      properties:
+        title: { type: string }
+        objective: { type: string, description: "practice_run | tyre_life_test | qualy_long_run | baseline" }
+        car:
+          type: object
+          properties:
+            code: { type: string }
+            tank_capacity_l: { type: number, minimum: 0 }
+        track:
+          type: object
+          properties:
+            code: { type: string }
+            length_km: { type: number, minimum: 0 }
+            pit_lane_loss_s: { type: number, minimum: 0 }
+        weather:
+          type: object
+          properties:
+            ambient_c: { type: number }
+            track_c: { type: number }
+            wind_kph: { type: number }
+            humidity_pct: { type: number, minimum: 0, maximum: 100 }
+        driver:
+          type: object
+          properties:
+            name: { type: string }
+        target_pace_s: { type: number, minimum: 0, description: "Required if run_duration_min is provided" }
+        fuel_burn_l_per_lap: { type: number, exclusiveMinimum: 0 }
+        required_laps: { type: integer, minimum: 1 }
+        run_duration_min: { type: number, minimum: 1 }
+        starting_fuel_l: { type: number, minimum: 0 }
+    RunPlan:
+      type: object
+      required: [id, inputs, result, status, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string, nullable: true }
+        objective: { type: string, nullable: true }
+        status: { type: string, enum: [computed], default: computed }
+        inputs:
+          allOf:
+            - $ref: '#/components/schemas/RunPlanInput'
+        result:
+          $ref: '#/components/schemas/RunPlanResult'
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    RunPlanResult:
+      type: object
+      required: [total_fuel_required_l]
+      properties:
+        estimated_laps: { type: integer, minimum: 0 }
+        total_fuel_required_l: { type: number, minimum: 0 }
+        laps_possible: { type: integer, minimum: 0 }
+        pit_stops_required: { type: integer, minimum: 0 }
+        estimated_total_time_s: { type: number, minimum: 0 }
+        stints:
+          type: array
+          items:
+            type: object
+            properties:
+              stint_no: { type: integer, minimum: 1 }
+              laps: { type: integer, minimum: 0 }
+              fuel_start_l: { type: number, minimum: 0 }
+              fuel_end_l: { type: number, minimum: 0 }
+              refuel_l: { type: number, minimum: 0 }
+        notes:
+          type: array
+          items: { type: string }
+    ValidationError:
+      type: object
+      properties:
+        message: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              msg: { type: string }
